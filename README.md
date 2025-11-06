@@ -40,36 +40,39 @@
 * Release 1.0.20
 
 ## Sept 17, 2025
-* 新增DINOv3 (https://arxiv.org/abs/2508.10104) 的ConvNeXt and ViT 模型. ConvNeXt models were mapped to existing `timm` model. ViT support done via the EVA base model w/ a new `RotaryEmbeddingDinoV3` to match the DINOv3 specific RoPE impl
-  * HuggingFace Hub: https://huggingface.co/collections/timm/timm-dinov3-68cb08bb0bee365973d52a4d
-* MobileCLIP-2 (https://arxiv.org/abs/2508.20691) vision encoders. New MCI3/MCI4 FastViT variants added and weights mapped to existing FastViT and B, L/14 ViTs.
-* MetaCLIP-2 Worldwide (https://arxiv.org/abs/2507.22062) ViT encoder weights added.
-* SigLIP-2 (https://arxiv.org/abs/2502.14786) NaFlex ViT encoder weights added via timm NaFlexViT model.
-* Misc fixes and contributions
-
+* 新增DINOv3 (https://arxiv.org/abs/2508.10104) 的ConvNeXt and ViT 模型. ConvNeXt 模型被映射到现有的 `timm` 模型； ViT 模型通过 EVA 基础模型（EVA base model） 实现，并新增了 `RotaryEmbeddingDinoV3`，以匹配 DINOv3 特定的 旋转位置编码（RoPE） 实现。
+  * 可在 HuggingFace Hub 查看，timm DINOv3 模型合集: https://huggingface.co/collections/timm/timm-dinov3-68cb08bb0bee365973d52a4d
+* 新增MobileCLIP-2 (https://arxiv.org/abs/2508.20691) 视觉编码器. 添加了新的 MCI3 / MCI4 FastViT 变体，并将权重映射到现有的 FastViT 以及 ViT-B / ViT-L-14 模型。
+* 新增MetaCLIP-2 Worldwide (https://arxiv.org/abs/2507.22062) ViT 编码器权重。
+* 新增SigLIP-2 (https://arxiv.org/abs/2502.14786) NaFlex ViT ViT 编码器权重，通过 timm 中的 NaFlexViT 模型 实现。
+* 其他杂项修复与社区贡献。
+* 
 ## July 23, 2025
-* Add `set_input_size()` method to EVA models, used by OpenCLIP 3.0.0 to allow resizing for timm based encoder models.
-* Release 1.0.18, needed for PE-Core S & T models in OpenCLIP 3.0.0
-* Fix small typing issue that broke Python 3.9 compat. 1.0.19 patch release.
+* 为 EVA 模型 添加了`set_input_size()` 方法，供 OpenCLIP 3.0.0 使用，以支持对基于 timm 的编码器模型进行输入尺寸调整。
+* 发布版本 1.0.18，此功能是 OpenCLIP 3.0.0 中 PE-Core S 与 T 模型 所必需的。
+* 修复了一个 类型注解的小错误，该错误导致 Python 3.9 不兼容，因此发布了 1.0.19 补丁版本。
 
 ## July 21, 2025
-* ROPE support added to NaFlexViT. All models covered by the EVA base (`eva.py`) including EVA, EVA02, Meta PE ViT, `timm` SBB ViT w/ ROPE, and Naver ROPE-ViT can be now loaded in NaFlexViT when `use_naflex=True` passed at model creation time
-* More Meta PE ViT encoders added, including small/tiny variants, lang variants w/ tiling, and more spatial variants.
-* PatchDropout fixed with NaFlexViT and also w/ EVA models (regression after adding Naver ROPE-ViT)
-* Fix XY order with grid_indexing='xy', impacted non-square image use in 'xy' mode (only ROPE-ViT and PE impacted).
+*在 NaFlexViT 中添加了 ROPE（旋转位置编码）支持。 所有基于 EVA 基础模型 (`eva.py`)的模型 包括 EVA、EVA02、Meta PE ViT、带 ROPE 的 `timm` SBB ViT、以及 Naver ROPE-ViT 现在在创建模型时传入 `use_naflex=True` 即可在 NaFlexViT 中加载。
+* 新增更多 Meta PE ViT 编码器, 包括 small / tiny 小型版本、带平铺（tiling）的语言模型变体、以及更多 空间结构变体（spatial variants）。
+* 修复 PatchDropout 与 NaFlexViT 及 EVA 模型的兼容问题（此前在加入 Naver ROPE-ViT 后出现回归错误）。
+* 修复 grid_indexing='xy' 模式下的 XY 顺序错误，该问题会影响在 'xy' 模式中使用非正方形图像的情况（仅影响 ROPE-ViT 和 PE 模型）。
+
 
 ## July 7, 2025
-* MobileNet-v5 backbone tweaks for improved Google Gemma 3n behaviour (to pair with updated official weights)
-  * Add stem bias (zero'd in updated weights, compat break with old weights)
-  * GELU -> GELU (tanh approx). A minor change to be closer to JAX
-* Add two arguments to layer-decay support, a min scale clamp and 'no optimization' scale threshold
-* Add 'Fp32' LayerNorm, RMSNorm, SimpleNorm variants that can be enabled to force computation of norm in float32
-* Some typing, argument cleanup for norm, norm+act layers done with above
-* Support Naver ROPE-ViT (https://github.com/naver-ai/rope-vit) in `eva.py`, add RotaryEmbeddingMixed module for mixed mode, weights on HuggingFace Hub
+* 针对 Google Gemma 3n 的 MobileNet-v5 主干网络进行了优化调整（以配合更新后的官方权重）：
+  * 在 stem 层 中添加了偏置项（在新版权重中初始化为零，与旧版权重不兼容）；
+  * 将激活函数从标准 GELU 替换为 近似 tanh 版本的 GELU，以更接近 JAX 的实现。
+* 为 layer-decay（层级学习率衰减）机制添加了两个新参数：最小缩放限制（min scale clamp）和 “无优化”缩放阈值（no optimization scale threshold）。
+* 新增三种强制使用 float32 精度计算的归一化层变体：`Fp32LayerNorm`、`Fp32RMSNorm`、`Fp32SimpleNorm`，可用于在混合精度训练中强制以 float32 精度执行归一化计算，提升数值稳定性。
+* 对归一化层（norm）与归一化-激活层（norm+act）的 类型注解与参数定义 进行了清理与统一。
+* 在 `eva.py` 中添加对 Naver ROPE-ViT (https://github.com/naver-ai/rope-vit) 的支持，, 并新增 RotaryEmbeddingMixed 模块以支持混合模式旋转位置编码；相应模型权重已上传至 HuggingFace Hub。
 
-|model                                             |img_size|top1  |top5  |param_count|
+**Naver 团队的 ROPE-ViT（旋转位置编码 ViT）系列模型 在 timm 框架中的性能汇总**
+
+|model 模型名称（包含架构、补丁大小、是否混合APE/ROPE、数据集来源等）|img_size|top1  |top5  |param_count|
 |--------------------------------------------------|--------|------|------|-----------|
-|vit_large_patch16_rope_mixed_ape_224.naver_in1k  |224     |84.84 |97.122|304.4      |
+|vit_large_patch16_rope_mixed_ape_224.naver_in1k（大型 ViT 模型，使用混合式 ROPE + APE（旋转位置编码 + 绝对位置编码）  |224     |84.84 |97.122|304.4      |
 |vit_large_patch16_rope_mixed_224.naver_in1k      |224     |84.828|97.116|304.2      |
 |vit_large_patch16_rope_ape_224.naver_in1k        |224     |84.65 |97.154|304.37     |
 |vit_large_patch16_rope_224.naver_in1k            |224     |84.648|97.122|304.17     |
