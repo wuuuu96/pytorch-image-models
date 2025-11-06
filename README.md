@@ -13,25 +13,27 @@
 ## What's New
 
 ## Nov 4, 2025
-* Fix LayerScale / LayerScale2d init bug (init values ignored), introduced in 1.0.21. Thanks https://github.com/Ilya-Fradlin
-* Release 1.0.22
+* 修复了 LayerScale / LayerScale2d 初始化的错误（初始化数值被忽略），该问题是在版本 1.0.21 中引入的。 感谢 https://github.com/Ilya-Fradlin
+* 发布版本 1.0.22。
 
 ## Oct 31, 2025 🎃
-* Update imagenet & OOD variant result csv files to include a few new models and verify correctness over several torch & timm versions
-* EfficientNet-X and EfficientNet-H B5 model weights added as part of a hparam search for AdamW vs Muon (still iterating on Muon runs)
+* 更新了 ImageNet 和 OOD（Out-of-Distribution，分布外） 变体结果的 CSV 文件，
+以包含几个新的模型，并在多个 PyTorch 与 timm 版本上验证结果的正确性。
+* 在一次关于 AdamW 与 Muon 优化器的超参数搜索中，
+新增了 EfficientNet-X 与 EfficientNet-H 的 B5 模型权重（目前仍在继续进行 Muon 训练实验）。
 
 ## Oct 16-20, 2025
-* Add an impl of the Muon optimizer (based on https://github.com/KellerJordan/Muon) with customizations
-  * extra flexibility and improved handling for conv weights and fallbacks for weight shapes not suited for orthogonalization
-  * small speedup for NS iterations by reducing allocs and using fused (b)add(b)mm ops
-  * by default uses AdamW (or NAdamW if `nesterov=True`) updates if muon not suitable for parameter shape (or excluded via param group flag)
-  * like torch impl, select from several LR scale adjustment fns via `adjust_lr_fn`
-  * select from several NS coefficient presets or specify your own via `ns_coefficients`
-* First 2 steps of 'meta' device model initialization supported
-  * Fix several ops that were breaking creation under 'meta' device context
-  * Add device & dtype factory kwarg support to all models and modules (anything inherting from nn.Module) in `timm`
-* License fields added to pretrained cfgs in code
-* Release 1.0.21
+* 添加了 Muon 优化器 的实现(基于https://github.com/KellerJordan/Muon) 并进行了自定义改进：
+  * 为卷积权重提供了更高的灵活性与改进的处理方式，并对不适合正交化的权重形状提供回退机制；
+  * 通过减少内存分配、使用融合的 `(b)add(b)mm` 操作，加快了 Newton-Schulz（NS）迭代 的速度；
+  * 当参数形状不适合 Muon，或通过参数组标志被排除时，默认改用 AdamW（或当 `nesterov=True` 时使用 NAdamW） 更新方式；
+  * 与 PyTorch 实现类似，可通过 `adjust_lr_fn` 选择多种 学习率缩放调整函数
+  * 可通过 `ns_coefficients` 选择多组 NS 系数预设或自定义系数。
+* 支持 `meta` 设备模式下模型初始化的前两个步骤：
+  * 修复了在 “meta” 设备上下文中会导致创建失败的多个操作；
+  * 为 `timm` 中所有模型和模块（继承自 `nn.Module` 的类）添加了 `device` 和 `dtype` 工厂关键字参数支持。
+* 在代码中的 预训练配置（pretrained cfgs） 添加了 许可证字段（license fields）。
+* 发布版本 1.0.21
 
 ## Sept 21, 2025
 * Remap DINOv3 ViT weight tags from `lvd_1689m` -> `lvd1689m` to match (same for `sat_493m` -> `sat493m`)
