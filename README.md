@@ -70,12 +70,23 @@
 
 **Naver 团队的 ROPE-ViT（旋转位置编码 ViT）系列模型 在 timm 框架中的性能汇总**
 
-|model 模型名称（包含架构、补丁大小、是否混合APE/ROPE、数据集来源等）|img_size|top1  |top5  |param_count|
+vit_large_patch16_rope_mixed_ape_224.naver_in1k表示大型 Vision Transformer 模型（patch 大小 16×16），使用**混合式旋转位置编码（ROPE）与绝对位置编码（APE）**，输入图像尺寸为 224×224，
+由 Naver AI 团队在 ImageNet-1K 数据集上训练获得权重。
+
+vit_large_patch16_rope_ape_224.naver_in1k表示大型 Vision Transformer 模型（patch 大小 16×16），使用**标准旋转位置编码（ROPE）与标准绝对位置编码（APE）**，采用传统分层方式而非混合融合，输入图像尺寸为 224×224，
+同样由 Naver AI 在 ImageNet-1K 上训练获得权重。其中“rope_ape” 表示 “先加绝对位置编码，再用旋转位置编码”，但两者是分阶段独立使用的，而非在同一层中融合。
+
+vit_large_patch16_rope_mixed_224.naver_in1k表示Vision Transformer 大型模型（patch 大小 16×16），
+使用**混合式旋转位置编码（ROPE Mixed）**，输入图像尺寸 224×224，由 Naver AI 团队在 ImageNet-1K 数据集上训练得到。
+
+vit_large_patch16_rope_224.naver_in1k表示Vision Transformer 大型模型（patch 大小 16×16），使用 **标准旋转位置编码（ROPE）**，输入图像尺寸 224×224，由 Naver AI 团队在 ImageNet-1K 上训练得到。
+
+|model 模型名称（包含架构、补丁大小、是否混合APE/ROPE、数据集来源等）|img_size|top1  |top5  |param_count参数量 (M)|
 |--------------------------------------------------|--------|------|------|-----------|
-|vit_large_patch16_rope_mixed_ape_224.naver_in1k（大型 ViT 模型，使用混合式 ROPE + APE（旋转位置编码 + 绝对位置编码）  |224     |84.84 |97.122|304.4      |
-|vit_large_patch16_rope_mixed_224.naver_in1k      |224     |84.828|97.116|304.2      |
-|vit_large_patch16_rope_ape_224.naver_in1k        |224     |84.65 |97.154|304.37     |
-|vit_large_patch16_rope_224.naver_in1k            |224     |84.648|97.122|304.17     |
+|vit_large_patch16_rope_mixed_ape_224.naver_in1k  |224     |84.84 |97.122|304.4      |
+|vit_large_patch16_rope_mixed_224.naver_in1k    |224     |84.828|97.116|304.2      |
+|vit_large_patch16_rope_ape_224.naver_in1k     |224     |84.65 |97.154|304.37     |
+|vit_large_patch16_rope_224.naver_in1k         |224     |84.648|97.122|304.17     |
 |vit_base_patch16_rope_mixed_ape_224.naver_in1k   |224     |83.894|96.754|86.59      |
 |vit_base_patch16_rope_mixed_224.naver_in1k       |224     |83.804|96.712|86.44      |
 |vit_base_patch16_rope_ape_224.naver_in1k         |224     |83.782|96.61 |86.59      |
@@ -84,92 +95,104 @@
 |vit_small_patch16_rope_mixed_224.naver_in1k      |224     |81.216|95.022|21.99      |
 |vit_small_patch16_rope_ape_224.naver_in1k        |224     |81.004|95.016|22.06      |
 |vit_small_patch16_rope_mixed_ape_224.naver_in1k  |224     |80.986|94.976|22.06      |
-* Some cleanup of ROPE modules, helpers, and FX tracing leaf registration
-* Preparing version 1.0.17 release
+* 对 ROPE 模块、辅助函数以及 FX tracing（函数追踪）中的叶节点注册 进行了代码清理与优化
+* 为 1.0.17 版本发布 做准备
 
 ## June 26, 2025
-* MobileNetV5 backbone (w/ encoder only variant) for [Gemma 3n](https://ai.google.dev/gemma/docs/gemma-3n#parameters) image encoder
-* Version 1.0.16 released
+* 为 [Gemma 3n](https://ai.google.dev/gemma/docs/gemma-3n#parameters) 图像编码器添加了 MobileNetV5 主干网络（仅编码器版本）。
+* 发布版本 1.0.16。
 
 ## June 23, 2025
-* Add F.grid_sample based 2D and factorized pos embed resize to NaFlexViT. Faster when lots of different sizes (based on example by https://github.com/stas-sl).
-* Further speed up patch embed resample by replacing vmap with matmul (based on snippet by https://github.com/stas-sl).
-* Add 3 initial native aspect NaFlexViT checkpoints created while testing, ImageNet-1k and 3 different pos embed configs w/ same hparams.
+* 在 NaFlexViT 中添加了基于 F.grid_sample 的二维与分解式位置编码（positional embedding）重采样功能。 当需要适配大量不同输入尺寸时，该方法能显著加快处理速度 (参考示例 https://github.com/stas-sl).
+* 通过将 patch embedding 的重采样方式由 vmap 替换为 matmul，进一步提升了计算速度 (参考示例 https://github.com/stas-sl).
+*在测试过程中新增了 3 个初始的 NaFlexViT 原生长宽比（native aspect）模型检查点（checkpoints），
+这些模型基于 ImageNet-1K 数据集 训练，
+并在 相同超参数（hparams） 下采用了 三种不同的位置编码（positional embedding）配置。在 NaFlexViT 中添加了基于 F.grid_sample 的 二维和分解式位置编码重采样（resize）方法。当模型需要适配多种输入尺寸时，该方法速度更快 (参考 https://github.com/stas-sl).
+* 通过将 patch embedding 重采样 中的 vmap 操作替换为 matmul（矩阵乘法），进一步提升运行速度 (参考 https://github.com/stas-sl).
+* （再次强调）在测试阶段新增了 3 个基于 ImageNet-1K 的 NaFlexViT 原生长宽比模型检查点，均在相同超参数下测试了三种不同的位置编码方案。
+
+**NaFlexViT 系列模型（Base 级别） 在 ImageNet-1K 上的性能表格（源自 timm 模型库）**
+
+naflexvit_base_patch16_par_gap.e300_s576_in1k表示：模型架构名称：NaFlex Vision Transformer（支持动态输入比例的 ViT），模型规模：Base 版（中等容量），每 16×16 图像块作为一个 token，表示不同的结构或嵌入变体：par：parallel并行特征路径，parfac：parallel factorized 并行 + 分解式通道映射，gap：global average pooling，全局平均池化输出层，e300表示训练 epoch 数为 300，s576表示训练或评估图像尺寸为 576×576，in1k表示在 ImageNet-1K 数据集上训练
 
  | Model | Top-1 Acc | Top-5 Acc | Params (M) | Eval Seq Len |
  |:---|:---:|:---:|:---:|:---:|
  | [naflexvit_base_patch16_par_gap.e300_s576_in1k](https://hf.co/timm/naflexvit_base_patch16_par_gap.e300_s576_in1k) | 83.67 | 96.45 | 86.63 | 576 |
  | [naflexvit_base_patch16_parfac_gap.e300_s576_in1k](https://hf.co/timm/naflexvit_base_patch16_parfac_gap.e300_s576_in1k) | 83.63 | 96.41 | 86.46 | 576 |
  | [naflexvit_base_patch16_gap.e300_s576_in1k](https://hf.co/timm/naflexvit_base_patch16_gap.e300_s576_in1k) | 83.50 | 96.46 | 86.63 | 576 |
-* Support gradient checkpointing for `forward_intermediates` and fix some checkpointing bugs. Thanks https://github.com/brianhou0208
-* Add 'corrected weight decay' (https://arxiv.org/abs/2506.02285) as option to AdamW (legacy), Adopt, Kron, Adafactor (BV), Lamb, LaProp, Lion, NadamW, RmsPropTF, SGDW optimizers
-* Switch PE (perception encoder) ViT models to use native timm weights instead of remapping on the fly
-* Fix cuda stream bug in prefetch loader
+* 为 forward_intermediates 添加了 梯度检查点（gradient checkpointing） 支持，并修复了一些相关的检查点错误。 Thanks https://github.com/brianhou0208
+* 在多种优化器中新增了 “校正权重衰减（corrected weight decay）” 选项，参考论文 (https://arxiv.org/abs/2506.02285) 支持的优化器包括：AdamW（legacy 旧版）、Adopt、Kron、Adafactor (BV)、Lamb、LaProp、Lion、NadamW、RmsPropTF 和 SGDW。
+* 将 PE（Perception Encoder）系列 ViT 模型 切换为直接使用 timm 原生权重，而不再在运行时动态映射（remapping）。
+* 修复了 prefetch loader（预取加载器） 中的 CUDA 流（cuda stream）错误。
   
 ## June 5, 2025
-* Initial NaFlexVit model code. NaFlexVit is a Vision Transformer with:
-  1. Encapsulated embedding and position encoding in a single module
-  2. Support for nn.Linear patch embedding on pre-patchified (dictionary) inputs
-  3. Support for NaFlex variable aspect, variable resolution (SigLip-2: https://arxiv.org/abs/2502.14786)
-  4. Support for FlexiViT variable patch size (https://arxiv.org/abs/2212.08013)
-  5. Support for NaViT fractional/factorized position embedding (https://arxiv.org/abs/2307.06304)
-* Existing vit models in `vision_transformer.py` can be loaded into the NaFlexVit model by adding the `use_naflex=True` flag to `create_model`
-  * Some native weights coming soon
-* A full NaFlex data pipeline is available that allows training / fine-tuning / evaluating with variable aspect / size images
-  * To enable in `train.py` and `validate.py` add the `--naflex-loader` arg, must be used with a NaFlexVit
-* To evaluate an existing (classic) ViT loaded in NaFlexVit model w/ NaFlex data pipe:
-  * `python validate.py /imagenet --amp -j 8 --model vit_base_patch16_224 --model-kwargs use_naflex=True --naflex-loader --naflex-max-seq-len 256` 
-* The training has some extra args features worth noting
-  * The `--naflex-train-seq-lens'` argument specifies which sequence lengths to randomly pick from per batch during training
-  * The `--naflex-max-seq-len` argument sets the target sequence length for validation
-  * Adding `--model-kwargs enable_patch_interpolator=True --naflex-patch-sizes 12 16 24` will enable random patch size selection per-batch w/ interpolation
-  * The `--naflex-loss-scale` arg changes loss scaling mode per batch relative to the batch size, `timm` NaFlex loading changes the batch size for each seq len
+* NaFlexViT 模型初始代码说明。 NaFlexViT 是一种新型 Vision Transformer（视觉 Transformer），其主要特点包括：
+  1. 嵌入层与位置编码整合，将 patch embedding（图像块嵌入）与位置编码封装在同一个模块中，方便统一管理与优化。
+  2. 支持 nn.Linear 形式的 patch embedding（线性投影嵌入），可直接处理 已预先切分好的 patch 输入（字典格式输入），例如来自分布式字典或预处理缓存的数据。
+  3. 支持 NaFlex 的可变长宽比与可变分辨率输入, 参考论文 (SigLip-2: https://arxiv.org/abs/2502.14786)，使得模型能够处理具有不同长宽比、不同分辨率的图像。
+  4. 支持 FlexiViT 可变 patch 大小机制， 参考论文(https://arxiv.org/abs/2212.08013)，模型可在训练或推理中动态改变 patch 大小，实现多尺度适应。
+  5. 支持 NaViT 的分数化 / 分解式位置编码，参考论文 (https://arxiv.org/abs/2307.06304)，可使用分数（fractional）或因子化（factorized）位置编码方式，更好适配非固定形状的输入。
+* `vision_transformer.py` 中的现有 ViT 模型，只需在 `create_model()` 函数中添加参数 `use_naflex=True`，即可加载到新的 NaFlexViT 模型架构 中。
+  * 部分 NaFlexViT 原生权重 将在后续版本提供。
+* NaFlex 系列提供了一个完整的数据加载与训练管线，支持在不同图像比例 / 尺寸下进行训练、微调与评估。
+  * 在 `train.py` 或 `validate.py` 中启用 NaFlex 加载器命令 `--naflex-loader`,该选项必须与 NaFlexViT 模型配合使用。
+* 可通过以下命令评估一个经典 ViT 模型（加载为 NaFlexViT 形式）：
+  * `python validate.py /imagenet --amp -j 8 --model vit_base_patch16_224 --model-kwargs use_naflex=True --naflex-loader --naflex-max-seq-len 256`
+  * --amp 启用混合精度；--naflex-loader 启用 NaFlex 数据加载；--naflex-max-seq-len 设置验证时的目标序列长度。
+* 训练中的重要 NaFlex 参数：
+  * `--naflex-train-seq-lens'` 在训练过程中，每个 batch 会随机选择不同的序列长度（seq length），以提升模型对多分辨率输入的适应性。
+  *  `--naflex-max-seq-len` 指定验证时的最大序列长度。
+  *  `--model-kwargs enable_patch_interpolator=True --naflex-patch-sizes 12 16 24` 启用随机 patch 大小选择（12、16、24），并自动对特征进行插值（interpolation），实现多尺度训练。
+  * `--naflex-loss-scale` 调整每个 batch 的 损失缩放模式（loss scaling），以适应 NaFlex 加载器在不同序列长度下动态改变 batch size 的特性。
 
 ## May 28, 2025
-* Add a number of small/fast models thanks to https://github.com/brianhou0208
+* 新增多个轻量级 / 高速模型 thanks to https://github.com/brianhou0208
   * SwiftFormer - [(ICCV2023) SwiftFormer: Efficient Additive Attention for Transformer-based Real-time Mobile Vision Applications](https://github.com/Amshaker/SwiftFormer) 
   * FasterNet - [(CVPR2023) Run, Don’t Walk: Chasing Higher FLOPS for Faster Neural Networks](https://github.com/JierunChen/FasterNet)
   * SHViT - [(CVPR2024) SHViT: Single-Head Vision Transformer with Memory Efficient](https://github.com/ysj9909/SHViT)
   * StarNet - [(CVPR2024) Rewrite the Stars](https://github.com/ma-xu/Rewrite-the-Stars)
   * GhostNet-V3 [GhostNetV3: Exploring the Training Strategies for Compact Models](https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv3_pytorch)
-* Update EVA ViT (closest match) to support Perception Encoder models (https://arxiv.org/abs/2504.13181) from Meta, loading Hub weights but I still need to push dedicated `timm` weights
-  * Add some flexibility to ROPE impl
-* Big increase in number of models supporting `forward_intermediates()` and some additional fixes thanks to https://github.com/brianhou0208
-  * DaViT, EdgeNeXt, EfficientFormerV2, EfficientViT(MIT), EfficientViT(MSRA), FocalNet, GCViT, HGNet /V2, InceptionNeXt, Inception-V4, MambaOut, MetaFormer, NesT, Next-ViT, PiT, PVT V2, RepGhostNet, RepViT, ResNetV2, ReXNet, TinyViT, TResNet, VoV
-* TNT model updated w/ new weights `forward_intermediates()` thanks to https://github.com/brianhou0208
-* Add `local-dir:` pretrained schema, can use `local-dir:/path/to/model/folder` for model name to source model / pretrained cfg & weights Hugging Face Hub models (config.json + weights file) from a local folder.
-* Fixes, improvements for onnx export
+* 更新 EVA ViT 模型以支持 Meta 的 Perception Encoder（PE）结构 (参考论文https://arxiv.org/abs/2504.13181)当前 EVA ViT 已能加载来自 Meta Hub 的 PE 模型权重；但作者计划后续在 timm 中推送专用权重版本。
+  * 同时对 ROPE（旋转位置编码） 的实现进行了灵活性扩展，以兼容不同 PE 架构。
+* 大幅增加支持 `forward_intermediates() `的模型数量并进行了一系列修复 thanks to https://github.com/brianhou0208
+  * 新增支持的模型包括：DaViT, EdgeNeXt, EfficientFormerV2, EfficientViT(MIT), EfficientViT(MSRA), FocalNet, GCViT, HGNet /V2, InceptionNeXt, Inception-V4, MambaOut, MetaFormer, NesT, Next-ViT, PiT, PVT V2, RepGhostNet, RepViT, ResNetV2, ReXNet, TinyViT, TResNet, VoV
+* TTNT 模型更新, 更新了 TNT 模型权重并添加了`forward_intermediates()` 功能支持。 thanks to https://github.com/brianhou0208
+* 新增 `local-dir:` 预训练模型加载方案, 现在可使用： `local-dir:/path/to/model/folder` 来指定模型名称。 该功能允许从 本地文件夹 加载 Hugging Face Hub 格式的模型（包括 config.json 和权重文件），
+无需联网即可本地推理与微调。
+* 修复了一些导出错误；优化了 ONNX 模型导出流程 的兼容性与稳定性。
     
 ## Feb 21, 2025
-* SigLIP 2 ViT image encoders added (https://huggingface.co/collections/timm/siglip-2-67b8e72ba08b09dd97aecaf9)
-  * Variable resolution / aspect NaFlex versions are a WIP
-* Add 'SO150M2' ViT weights trained with SBB recipes, great results, better for ImageNet than previous attempt w/ less training.
+* 新增 SigLIP 2 系列 ViT 图像编码器，模型集合链接 (https://huggingface.co/collections/timm/siglip-2-67b8e72ba08b09dd97aecaf9)
+  * 支持 多分辨率 / 多长宽比 的 NaFlex 版本 正在开发中（WIP, Work In Progress）。
+* 新增 “SO150M2” ViT 权重（使用 SBB 训练配方）, 采用 SBB（Scaled Baseline Boosted）训练策略，在 ImageNet 上取得优异结果, 练代价更低，但性能优于之前版本。
+  vit_so150m2_patch16_reg1_gap_448.sbb_e200_in12k_ft_in1k表示：一款基于 ViT 的 SO150M2 配置模型，使用 16×16 patch、正则等级为 1、用 GAP 做分类，输入分辨率 448；采用 SBB 训练配方，在 ImageNet-12K 上训练 200 epoch 后，再在 ImageNet-1K 上做了微调
   * `vit_so150m2_patch16_reg1_gap_448.sbb_e200_in12k_ft_in1k` - 88.1% top-1
   * `vit_so150m2_patch16_reg1_gap_384.sbb_e200_in12k_ft_in1k` - 87.9% top-1
   * `vit_so150m2_patch16_reg1_gap_256.sbb_e200_in12k_ft_in1k` - 87.3% top-1
   * `vit_so150m2_patch16_reg4_gap_256.sbb_e200_in12k`
-* Updated InternViT-300M '2.5' weights
+* 更新 InternViT-300M ‘2.5’ 权重
 * Release 1.0.15
 
 ## Feb 1, 2025
 * FYI PyTorch 2.6 & Python 3.13 are tested and working w/ current main and released version of `timm`
 
 ## Jan 27, 2025
-* Add Kron Optimizer (PSGD w/ Kronecker-factored preconditioner) 
-  * Code from https://github.com/evanatyourservice/kron_torch
-  * See also https://sites.google.com/site/lixilinx/home/psgd
+* 新增 Kron 优化器（即 PSGD：带 Kronecker 分解预条件器的随机梯度下降）。
+👉 这是一种利用 Kronecker 分解（Kronecker-factored preconditioner）加速优化的变体，可在保持稳定性的同时加快收敛。
+  * 代码来源 https://github.com/evanatyourservice/kron_torch
+  * 参考资料 https://sites.google.com/site/lixilinx/home/psgd
 
 ## Jan 19, 2025
-* Fix loading of LeViT safetensor weights, remove conversion code which should have been deactivated
-* Add 'SO150M' ViT weights trained with SBB recipes, decent results, but not optimal shape for ImageNet-12k/1k pretrain/ft
+* 修复了 LeViT 模型 safetensor 权重加载问题，并移除了原本应停用的权重转换代码。
+* 新增`SO150M` 系列 ViT 权重（使用 SBB 训练配方）， 效果良好，但在 ImageNet-12K / 1K 预训练 + 微调 的形状配置上尚未完全最优。
   * `vit_so150m_patch16_reg4_gap_256.sbb_e250_in12k_ft_in1k` - 86.7% top-1
   * `vit_so150m_patch16_reg4_gap_384.sbb_e250_in12k_ft_in1k` - 87.4% top-1
   * `vit_so150m_patch16_reg4_gap_256.sbb_e250_in12k`
-* Misc typing, typo, etc. cleanup
+* 清理了部分类型注解、拼写错误等杂项问题。
 * 1.0.14 release to get above LeViT fix out
 
 ## Jan 9, 2025
-* Add support to train and validate in pure `bfloat16` or `float16`
+* 新增对 纯 `bfloat16` 或 `float16` 精度 模式下进行训练与验证的支持。
 * `wandb` project name arg added by https://github.com/caojiaolong, use arg.experiment for name
 * Fix old issue w/ checkpoint saving not working on filesystem w/o hard-link support (e.g. FUSE fs mounts)
 * 1.0.13 release
@@ -178,10 +201,10 @@
 * Add `torch.utils.checkpoint.checkpoint()` wrapper in `timm.models` that defaults `use_reentrant=False`, unless `TIMM_REENTRANT_CKPT=1` is set in env.
 
 ## Dec 31, 2024
-* `convnext_nano` 384x384 ImageNet-12k pretrain & fine-tune. https://huggingface.co/models?search=convnext_nano%20r384
-* Add AIM-v2 encoders from https://github.com/apple/ml-aim, see on Hub: https://huggingface.co/models?search=timm%20aimv2
-* Add PaliGemma2 encoders from https://github.com/google-research/big_vision to existing PaliGemma, see on Hub: https://huggingface.co/models?search=timm%20pali2
-* Add missing L/14 DFN2B 39B CLIP ViT, `vit_large_patch14_clip_224.dfn2b_s39b`
+* `convnext_nano` 模型在 384×384 分辨率下完成 ImageNet-12K 预训练与微调。. https://huggingface.co/models?search=convnext_nano%20r384
+* 新增 AIM-v2 编码器 来源 https://github.com/apple/ml-aim, 可在 Hugging Face Hub 查看: https://huggingface.co/models?search=timm%20aimv2
+* 新增 PaliGemma2 编码器 来源 https://github.com/google-research/big_vision 属于现有 PaliGemma 系列的后续版本。, see on Hub: https://huggingface.co/models?search=timm%20pali2
+* 新增缺失的 L/14 DFN2B 39B CLIP ViT 模型, 模型名：`vit_large_patch14_clip_224.dfn2b_s39b` → 属于大型 CLIP Vision Transformer 模型系列。
 * Fix existing `RmsNorm` layer & fn to match standard formulation, use PT 2.5 impl when possible. Move old impl to `SimpleNorm` layer, it's LN w/o centering or bias. There were only two `timm` models using it, and they have been updated.
 * Allow override of `cache_dir` arg for model creation
 * Pass through `trust_remote_code` for HF datasets wrapper
